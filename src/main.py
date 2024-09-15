@@ -117,7 +117,6 @@ def main():
 
     if not df.empty:
         df.to_csv("cleaned_oscar_movies.csv", index=False)
-        df.to_excel("test.xlsx", index=False)
         print("Data exported to 'cleaned_oscar_movies.csv'.")
     else:
         print("No data was exported.")
