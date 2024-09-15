@@ -1,4 +1,6 @@
 import re
+from concurrent.futures import as_completed
+from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 import requests
@@ -19,9 +21,15 @@ def scrape_movies(url):
                 "detail_url": film["Detail URL"],
                 "producers": film["Producer(s)"],
                 "production_company": film["Production Company(s)"],
-                "original_budget": scrape_budget(film["Detail URL"]),
+                # "original_budget": scrape_budget(film["Detail URL"]),
             }
             films_data.append(film_details)
+    detail_urls = [film["detail_url"] for film in films_data]
+    budgets = scrape_budgets_concurrently(detail_urls)
+
+    for i, film in enumerate(films_data):
+        film["original_budget"] = budgets[i]
+
     return pd.DataFrame(films_data)
 
 
@@ -36,6 +44,22 @@ def scrape_budget(detail_url):
     data = response.json()
     original_budget = data.get("Budget", "")
     return original_budget
+
+
+def scrape_budgets_concurrently(detail_urls):
+    budgets = ["0"] * len(detail_urls)
+    with ThreadPoolExecutor(max_workers=50) as executor:
+        future_to_url = {
+            executor.submit(scrape_budget, url): idx
+            for idx, url in enumerate(detail_urls)
+        }
+        for future in as_completed(future_to_url):
+            idx = future_to_url[future]
+            try:
+                budgets[idx] = future.result()
+            except Exception as e:
+                print(f"Error in future for index {idx}: {e}")
+    return budgets
 
 
 def clean_year(year):
@@ -60,9 +84,6 @@ def add_converted_budget(df):
         df["converted_budget"]
         .str.extract(r"(.*)or £", expand=False)
         .fillna(df["converted_budget"])
-    )
-    df["converted_budget"] = df["converted_budget"].str.replace(
-        r"(\d)\.(\d{3})\.(\d{3})", r"\1,\2,\3", regex=True
     )
     df["converted_budget"] = df["converted_budget"].str.replace(",", "")
     df["converted_budget"] = df["converted_budget"].str.replace(r":.*", "", regex=True)

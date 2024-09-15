@@ -19,12 +19,12 @@ Before running the script, ensure you have the following:
 - Python 3.8 or higher
 - Required Python libraries (see installation below)
 
-## Installation
+## Installation (Windows)
 
-1. Clone the repository:
+1. Clone the repository (skip if you already has the project in zip format extrated):
 
    ```bash
-   git clone https://github.com/yourusername/oscar-movies-scraper.git
+   git clone https://github.com/yago-gdm/oscar-movies-scraper.git
    ```
 
 2. Go to the repository folder:
@@ -35,11 +35,15 @@ Before running the script, ensure you have the following:
 
 3. Create a virtual environment (optional but recommended):
     ```bash
-   python3 -m venv venv
-    source venv/bin/activate   # On Windows, use `venv\Scripts\activate`
+   python -m venv venv
     ```
 
-4. Install the required dependencies:
+4. Create a virtual environment (optional but recommended):
+    ```bash
+    .\venv\Scripts\activate
+    ```
+
+5. Install the required dependencies:
     ```bash
    pip install -r requirements.txt
     ```
@@ -81,6 +85,15 @@ Fetches the budget information for a given film from a detailed page.
 
 ### Returns:
 - **str**: The original budget of the film. If an error occurs during the request, returns `"0"`.
+
+## `scrape_budgets_concurrently(detail_urls: list[str]) -> list[str]`
+Fetches the budget information concurrently for a list of films from their respective detail pages using multithreading. It leverages Python's ThreadPoolExecutor to perform concurrent requests, improving the efficiency of the process when multiple URLs are provided.
+
+### Parameters:
+- **detail_urls** (`list[str]`): A list of URLs, each pointing to a page with detailed information about a specific film, including its budget.
+
+### Returns:
+- **list[str]**: A list where each element corresponds to the budget of the film from the respective URL. If an error occurs during the scraping process for a specific URL, the corresponding budget in the returned list will be "0".
 
 ## `clean_year(year: str) -> str`
 Cleans a given year string to extract the 4-digit year.
